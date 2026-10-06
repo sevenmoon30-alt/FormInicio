@@ -1,0 +1,26 @@
+.contenedor {
+  font-family: sans-serif;
+  max-width: 700px;
+  margin: 20px auto;
+}
+
+input:focus,
+select:focus {
+  background-color: lightblue;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin-top: 10px;
+}
+
+th,
+td {
+  padding: 6px 10px;
+  text-align: left;
+}
+
+td button {
+  margin-right: 5px;
+}
