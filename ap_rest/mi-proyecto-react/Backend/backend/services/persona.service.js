@@ -1,4 +1,4 @@
-const personaModel = require('../models/persona.model');
+const Persona = require('../models/persona.model');
 
 const OBLIGATORIOS = ['tipo_documento', 'documento', 'nombre', 'apellido'];
 
@@ -18,18 +18,31 @@ function validar(persona) {
   }
 }
 
-// 2627 / 2601 = violación de UNIQUE en SQL Server
+// Sequelize avisa con este error cuando se rompe el UNIQUE (tipo_documento + documento)
 function traducirError(err) {
-  if (err.number === 2627 || err.number === 2601) {
+  if (err.name === 'SequelizeUniqueConstraintError') {
     return errorHttp(409, 'Ya existe una persona con ese tipo y número de documento');
   }
   return err;
 }
 
-exports.getAll = () => personaModel.getAll();
+// Deja los datos listos para guardar (celular y documento como texto, vacíos como null)
+function limpiar(p) {
+  return {
+    tipo_documento: p.tipo_documento,
+    documento: String(p.documento),
+    nombre: p.nombre,
+    apellido: p.apellido,
+    correo: p.correo || null,
+    celular: p.celular ? String(p.celular) : null,
+    fecha_nacimiento: p.fecha_nacimiento || null,
+  };
+}
+
+exports.getAll = () => Persona.findAll({ order: [['id', 'ASC']] });
 
 exports.getById = async (id) => {
-  const persona = await personaModel.getById(id);
+  const persona = await Persona.findByPk(id);
   if (!persona) throw errorHttp(404, 'Persona no encontrada');
   return persona;
 };
@@ -37,8 +50,8 @@ exports.getById = async (id) => {
 exports.create = async (persona) => {
   validar(persona);
   try {
-    const id = await personaModel.create(persona);
-    return { ...persona, id };
+    const nueva = await Persona.create(limpiar(persona));
+    return nueva;
   } catch (err) {
     throw traducirError(err);
   }
@@ -46,16 +59,18 @@ exports.create = async (persona) => {
 
 exports.update = async (id, persona) => {
   validar(persona);
+  const existente = await Persona.findByPk(id);
+  if (!existente) throw errorHttp(404, 'Persona no encontrada');
   try {
-    const filas = await personaModel.update(id, persona);
-    if (filas === 0) throw errorHttp(404, 'Persona no encontrada');
-    return { ...persona, id };
+    await existente.update(limpiar(persona));
+    return existente;
   } catch (err) {
     throw traducirError(err);
   }
 };
 
 exports.delete = async (id) => {
-  const filas = await personaModel.delete(id);
-  if (filas === 0) throw errorHttp(404, 'Persona no encontrada');
+  const existente = await Persona.findByPk(id);
+  if (!existente) throw errorHttp(404, 'Persona no encontrada');
+  await existente.destroy();
 };

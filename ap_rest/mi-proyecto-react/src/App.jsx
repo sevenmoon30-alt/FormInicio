@@ -3,7 +3,7 @@ import "./App.css";
 
 // URL del recurso "personas" servido por json-server
 // (npx json-server --watch db.json --port 3000)
-const API_URL = "http://localhost:3000/personas";
+const API_URL = "http://localhost:3001/personas";
 
 const FORM_INICIAL = {
   tipo_documento: "cedula",

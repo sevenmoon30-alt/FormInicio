@@ -1,7 +1,8 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const { getPool } = require('./config/db');
+const sequelize = require('./config/db');
+require('./models/persona.model'); // registra el modelo en Sequelize
 
 const app = express();
 
@@ -11,11 +12,14 @@ app.use(express.json());
 const personaRoutes = require('./routes/persona.routes');
 app.use('/personas', personaRoutes);
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, async () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);
   try {
-    await getPool();
+    await sequelize.authenticate();
+    console.log('Conectado a SQL Server con Sequelize');
+    await sequelize.sync(); // crea la tabla solo si no existe
+    console.log('Base de datos lista');
   } catch (err) {
     console.error('No se pudo conectar a SQL Server:', err.message);
   }
